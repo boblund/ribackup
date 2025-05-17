@@ -10,7 +10,7 @@ Backed up files are stored on the backup server in the same structure as on the 
 
 ribackup has the following system requirements:
 - [Rsync](https://rsync.samba.org/) and [ssh](https://www.ssh.com/academy/ssh/) must be available on the source server being backed up and the backup server where the backups are stored.
-- [NodeJS](https://nodejs.org) must be installed on the source server.
+- [NodeJS](https://nodejs.org) must be installed on the source server. Also on the backup server if verifying files is desired.
 - Snapshot-based requires that the backup server file system support hard links.
 - While not required, some scheduled command capability, such as [cron](https://en.wikipedia.org/wiki/Cron) or [launchctl](https://ss64.com/mac/launchctl.html), can be used to automate backups.
 
@@ -99,9 +99,11 @@ The plist can be unloaded with:
 ```
 launchctl bootout gui/${UID} ~/Library/LaunchAgents/com.username.ribackup.plist
 ```
-Any changes to the plist require bootout followed by bootstrap for the new plist to be loaded. Older OSX versions may use load and unload (without the gui/${UID} parameter) instead of bootstrap and bootout.
+Any changes to the plist requires bootout followed by bootstrap for the new plist to be loaded. Older OSX versions may use load and unload (without the gui/${UID} parameter) instead of bootstrap and bootout.
 # Verifying backups
-Backups can be verified any time by comparing hashes of the files on the source and backup servers. First, on backup server:
+Backups can be verified any time by comparing hashes of the files on the source and backup servers. **NOTE:** verification is only required to detect bit errors that can occur over time.
+
+First, on backup server:
 ```
 cp createHashes.mjs /usr/local/bin/createHashes.mjs
 chmod 755 /usr/local/bin/createHashes.mjs
@@ -112,7 +114,7 @@ On the source server do:
 ```
 node verifyHashes.mjs 2>/tmp/verifyHashes.err
 ```
-This will cause the backup server to generate a stream of (file, hash) tuples to the source server where they will be compared to the equivalent source (file, hash). Stdout is a repeating message showing the number of files compared and elapsed time in seconds. Stderr shows:
+This will cause the backup server to generate a stream of (file, hash) tuples to the source server where they will be compared to the equivalent source (file, hash). Stdout is a progress indicator showing the number of files compared and elapsed time in seconds. Stderr shows:
 - Backup files no longer on the source. This can happen when doing snapshot-incremental backups and deleting the source file.
 - Files with hash mismatches between the source and backup.
 # License
