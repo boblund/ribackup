@@ -104,6 +104,9 @@ Any changes to the plist requires bootout followed by bootstrap for the new plis
 Backups can be verified any time by comparing hashes of the files on the source and backup servers. **NOTE:** verification is only required to detect bit errors that can occur over time.
 
 First, on backup server:
+
+Make sure NodeJS is installed.
+
 ```
 cp createHashes.mjs /usr/local/bin/createHashes.mjs
 chmod 755 /usr/local/bin/createHashes.mjs
