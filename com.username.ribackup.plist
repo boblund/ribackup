@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+	<!-- Replace username with your username -->
+  <string>com.username.ribackup.plist</string>
+
+  <key>ProgramArguments</key>
+  <array>
+		<string>/usr/local/bin/node</string>
+		<!-- Replace path_to_ribackup with absolute path to ribackup directory -->
+		<string>/path_to_ribackup/ribackup.mjs</string>
+  </array>
+
+	<key>StandardOutPath</key>
+	<string>/tmp/ribackup.log</string>
+
+	<key>StandardErrorPath</key>
+	<string>/tmp/ribackup.err</string>
+
+  <key>Nice</key>
+  <integer>1</integer>
+
+	<key>StartCalendarInterval</key>
+	<dict>
+	    <key>Hour</key>
+	    <integer>1</integer>
+	    <key>Minute</key>
+	    <integer>0</integer>
+	</dict>
+</dict>
+</plist>
