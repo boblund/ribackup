@@ -25,7 +25,7 @@ const	includeExclude = [
 	'--include Documents/***',
 	'--exclude "Pictures/Photos Library.photoslibrary"',
 	'--include Pictures/***',
-	'--exclude *'
+	'--exclude "*"'
 ].reduce( ( a, e ) => a += `${ e } `, '' );
 
 // Retention strategy: empty means incremental, non-empty is a schedule for snapshot-incremental.
