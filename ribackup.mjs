@@ -7,7 +7,9 @@ import { join } from 'path';
 const { retentionSchedule, includeExclude, sourceDir, sshDest, backupsLoc } = await import( `./${ hostname().replace( '.local', '' ) }.backupConfig.mjs` );
 const args = process.argv.slice( 2 );
 let backupDir = join( backupsLoc, hostname().replace( '.local', '' ) );
-let backupPath =  sshDest + ':' + backupDir;
+let backupPath =  ( sshDest !== '' ? sshDest + ':' : '' ) + backupDir;
+console.log( `backupPath: ${ backupPath }` );
+let sshCmd = sshDest !== '' ? `ssh ${ sshDest }` : '';
 let snapshotName = '';
 
 const usage = `piBackup [ --help | [ --dry-run | --snapshot name ] ]`;
@@ -119,7 +121,7 @@ if( !backupConfig.isTM ){
 		process.exit( 1 );
 	}
 
-	if( ( await execps( `ssh ${ sshDest } ls -d ${ backupDir }/latest 2>&1` ) ).code === 0 ){
+	if( ( await execps( `${ sshCmd } ls -d ${ backupDir }/latest 2>&1` ) ).code === 0 ){
 		linkDest = `--link-dest=${ backupDir }/latest`;
 	}
 
@@ -131,13 +133,14 @@ if( !backupConfig.isTM ){
 		if( dryRun === '--dry-run' ){
 			process.exit( 0 );
 		}
-		const r = await execps( `ssh ${ sshDest } ls ${ backupDir }` );
+		const r = await execps( `${ sshCmd } ls ${ backupDir }` );
 		const backups = r.stdout.split( '\n' ).filter( ( name ) => name[ 0 ] === '2' ).sort( ( a, b ) => b > a ? 1 : b < a ? -1 : 0 );
 
 		if( linkDest != '' ){
-			await execps( `ssh ${ sshDest } rm ${ backupDir }/latest` );
+			await execps( `${ sshCmd } rm ${ backupDir }/latest` );
 		}
-		await execps( `ssh ${ sshDest } ln -s ${ backupDir }/${ snapshotName } ${ backupDir }/latest` );
+
+		await execps( `${ sshCmd } ln -s ${ backupDir }/${ snapshotName } ${ backupDir }/latest` );
 
 		// Remove expired snapshots
 		( async function(){
@@ -150,7 +153,7 @@ if( !backupConfig.isTM ){
 
 			// Keep newest of group that is next newest (which is all of previous day snapshots)
 			for( idx = 2, nextNewestCnt = 0; idx < backups.length && epochDay( backups[ 1 ] ) === epochDay( backups[ idx ] ); nextNewestCnt++, idx++ ) {
-				await execps( `ssh ${ sshDest } rm -rf ${ backupDir }/${ backups[ idx ] }` );
+				await execps( `${ sshCmd } rm -rf ${ backupDir }/${ backups[ idx ] }` );
 			};
 			backups.splice( 2, nextNewestCnt );
 
@@ -161,17 +164,17 @@ if( !backupConfig.isTM ){
 					if( snapshotAge < backupConfig.minAge( idx ) ){
 						// Snapshot age is less than the minimum age for backups[idx]. Delete the previous newer snapshot. This effectively
 						// keeps the oldest snapshot allowed at this idx. Eventually it will be old enough for the next idx.
-						await execps( `ssh ${ sshDest } rm -rf ${ backupDir }/${ backups[ backupConfig.firstGrp( idx ) ? idx : idx - 1 ] }` );
+						await execps( `${ sshCmd } rm -rf ${ backupDir }/${ backups[ backupConfig.firstGrp( idx ) ? idx : idx - 1 ] }` );
 						return; // Older snapshots are still at their previous idx and presumably still meet the min age requirement.
 					}
 				} else {
-					await execps( `ssh ${ sshDest } rm -rf ${ backupDir }/${ backups[ idx ] }` );
+					await execps( `${ sshCmd } rm -rf ${ backupDir }/${ backups[ idx ] }` );
 				}
 			}
 		} )();
 		console.log( `backup to ${ backupPath } successfull` );
 	} else {
 		console.error( `rsync failed: code: ${ code } ${ stderr }` );
-		await execps( `ssh ${ sshDest } rm -rf ${ backupDir }/${ snapshotName }` );
+		await execps( `${ sshCmd } rm -rf ${ backupDir }/${ snapshotName }` );
 	}
 }
