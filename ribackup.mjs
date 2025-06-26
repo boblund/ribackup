@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 
-import { exec, spawn } from 'child_process';
-import { hostname } from 'os';
-import { join } from 'path';
+import { execps, spawnAsync, hostname, join } from './ribImports.mjs';
 
 const { retentionSchedule, includeExclude, sourceDir, sshDest, backupsLoc } = await import( `./${ hostname().replace( '.local', '' ) }.backupConfig.mjs` );
 const args = process.argv.slice( 2 );
 let backupDir = join( backupsLoc, hostname().replace( '.local', '' ) );
 let backupPath =  ( sshDest !== '' ? sshDest + ':' : '' ) + backupDir;
-console.log( `backupPath: ${ backupPath }` );
 let sshCmd = sshDest !== '' ? `ssh ${ sshDest }` : '';
 let snapshotName = '';
 
@@ -50,30 +47,6 @@ function epochDay( snapshotName ){
 	// returns Epoch time in days. Epoch is measured in UTC so adjust 'snapshotName' date by local timezone offset
 	const date = new Date( snapshotName.replace( '_', ' ' ) );
 	return Math.floor( date.getTime() / ( 1000 * 3600 * 24 ) - date.getTimezoneOffset() / ( 60 * 24 ) );
-}
-
-function execps( cmd ){
-	return new Promise( res => {
-		exec( cmd, ( err, stdout, stderr ) => {
-			res( { code: err != null ? err.code : 0, stdout, stderr } );
-		} );
-	} );
-}
-
-function spawnAsync( string ){
-	let r = '';
-	const [ cmd, ...args ] = string.match( /(".*?"|'.*?'|\S+)/g ).map( e => e.replace( /['"](.*?)['"]/, "$1" ) );
-	const child = spawn( cmd, args );
-	child.stderr.on( 'data', chunk => { r += chunk; } );
-	return {
-		stdout: child.stdout,
-		stdin: child.stdin,
-		exit: new Promise( res => {
-			child.on( 'close', code => {
-				res( { code, stderr: r } );
-			} );
-		} )
-	};
 }
 
 const rsyncCmd = 'rsync -azv --delete';
