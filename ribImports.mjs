@@ -1,14 +1,17 @@
 // Hide NodeJs QuickJS differences for ribackup.mjs
 
-export { execps, spawnAsync, hostname, join };
+export { execps, spawnAsync, hostname, join, __dirname };
 
 const isNode = typeof process !== 'undefined' && !!process.versions && !!process.versions.node;
-let execps, spawnAsync, hostname, join;
+let execps, spawnAsync, hostname, join, __dirname;
 
 if( isNode ){
 	const { exec, spawn } = await import( 'child_process' );
 	( { hostname } = await import( 'os' ) );
 	( { join } = await import ( 'path' ) );
+	const { dirname } = await import( 'node:path' );
+	const { fileURLToPath } = await import( 'node:url' );
+	__dirname = dirname( fileURLToPath( import.meta.url ) );
 
 	execps = function( cmd ){
 		return new Promise( res => {
@@ -33,7 +36,25 @@ if( isNode ){
 			} )
 		};
 	};
+
 } else { // presume quickjs
+
+	hostname = function() {
+		const pipe = new Pipe( "hostname", "r" ); // Pipe is a global defined in process.c
+		const ab = pipe.read();
+		pipe.close();
+		return String.fromCharCode.apply( null, new Uint8Array( ab, 0, ab.byteLength - 1 ) ); //drop \n
+	};
+
+	join = function( ...args ) {
+		return args
+			.filter( Boolean ) // Remove empty or falsy segments
+			.join( '/' )
+			.replace( /\/+/g, '/' ); // Replace multiple slashes with a single slash
+	};
+
+	__dirname = dirname; // dirname is a global defined in process.c
+
 	Date.prototype.__toLocaleString = Date.prototype.toLocaleString;
 	Date.prototype.toLocaleString = function( arg ) {
 		if( arg === 'sv-SE' ) {
@@ -103,17 +124,4 @@ if( isNode ){
 		};
 	};
 
-	hostname = function() {
-		const pipe = new Pipe( "hostname", "r" );
-		const ab = pipe.read();
-		pipe.close();
-		return String.fromCharCode.apply( null, new Uint8Array( ab, 0, ab.byteLength - 1 ) ); //drop \n
-	};
-
-	join = function( ...args ) {
-		return args
-			.filter( Boolean ) // Remove empty or falsy segments
-			.join( '/' )
-			.replace( /\/+/g, '/' ); // Replace multiple slashes with a single slash
-	};
 }

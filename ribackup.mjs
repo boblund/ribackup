@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { execps, spawnAsync, hostname, join } from './ribImports.mjs';
+import { execps, spawnAsync, hostname, join, __dirname } from './ribImports.mjs';
 
-const { retentionSchedule, includeExclude, sourceDir, sshDest, backupsLoc } = await import( `./${ hostname().replace( '.local', '' ) }.backupConfig.mjs` );
+const { retentionSchedule, includeExclude, sourceDir, sshDest, backupsLoc } = await import( `${ join( __dirname, hostname().replace( '.local', '' ) ) }.backupConfig.mjs` );
 const args = process.argv.slice( 2 );
 let backupDir = join( backupsLoc, hostname().replace( '.local', '' ) );
 let backupPath =  ( sshDest !== '' ? sshDest + ':' : '' ) + backupDir;
