@@ -1,16 +1,19 @@
 # ribackup
 
-ribackup does incremental backups using rsync. Two types of backups are supported:
+Ribackup does incremental backups using rsync. Two types of backups are supported:
 - Incremental backups: Each backup only copies changed files.
 - Snapshot-based incremental backups: Each backup is saved as a new snapshot. Each snapshot has all backed up files but only files that are changed from the previous snapshot are copied. [TimeMachine](https://support.apple.com/en-us/104984) is one example of this type.
 
 Backed up files are stored on the backup server in the same structure as on the source. File restoration is a simple matter of copying the desired saved file.
+
+Ribackup runs as a [NodeJS](www.nodejs.org) application or as a [QuickJS](https://bellard.org/quickjs/) generated executable.
 
 # Dependencies
 
 ribackup has the following system requirements:
 - [Rsync](https://rsync.samba.org/) and [ssh](https://www.ssh.com/academy/ssh/) must be available on the source server being backed up and the backup server where the backups are stored.
 - [NodeJS](https://nodejs.org) must be installed on the source server. Also on the backup server if verifying files is desired.
+- [QuickJS](https://bellard.org/quickjs/) version 2025-04-26 (and possibly newer) if desired.
 - Snapshot-based requires that the backup server file system support hard links.
 - While not required, some scheduled command capability, such as [cron](https://en.wikipedia.org/wiki/Cron) or [launchctl](https://ss64.com/mac/launchctl.html), can be used to automate backups.
 
@@ -21,6 +24,13 @@ git clone https://github.com/boblund/ribackup.git
 cd ribackup
 ```
 The file ```ribackup.mjs``` can be left where it is or copied to any other directory.
+
+Install [QuickJS](https://bellard.org/quickjs/), if needed, as described in the documentation. Then:
+```
+cd quickjs
+make
+```
+Copy the ```ribackup``` to the desired directory. See the quickljs/README.md for additional details about how ribackup works with QuickJS.
 ## Fill in backup template
 ```backupConfig.js``` is the backup template that defines the information used for backups. Once filled in, it should be named \<computer-name\>.backupConfig.mjs and saved in the same directory as ```ribackup.mjs```. \<computer-name\> is the source server name, e.g. hostname on linux or system settings -> general -> about -> name on OSX.
 
