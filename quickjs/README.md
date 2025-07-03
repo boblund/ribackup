@@ -6,11 +6,21 @@ The overall philosophy for QuickJS support is:
 - Implement a NodeJS api using JavScript if possible (given the above constraint).
 - Implement all other apis required for ribackup in C via process.c, that is statically linked to the ribackup executable.
 
+## Pipe
+This a global class for creating instances of a pipe.
+- ```let pipe = new Pipe( <string>cmd, <string>mode )```: opens a pipe to shell cmd in r or w (read or write) mode.
+- ```let arrayBuffer = pipe.read()```: returns arrayBuffer with data read from the pipe or undefined if no data.
+- ```pipe.write( <ArrayBuffer>buffer )```: writes the contents of buffer to the pipe.
+- ```let code = pipe.close()```: closes the pipe and returns the exit code from the cmd.
+
 ## execps
-This is a promisefied version of NodeJS exec. Its QuickJS implementation uses a Pipe class defined in process.c. This class is a property of the global object in QuickJS. There are some limitations. C pipes only support read or write, not both. The C pipe does not expose stderr. For a read Pipe instance, a stderr is emulated as the most recent read of stdout in the case pipe.close() returns a non-zero error code; this may not always be the case but seems to work.
+This is a promisefied version of NodeJS exec. The QuickJS implementation uses a Pipe class defined in process.c. This class is a property of the global object in QuickJS. There are some limitations. The C pipe does not expose stderr. Stderr is emulated by redirecting stderr to stdout and intepretting the last read of stdout as stderr in the case pipe.close() returns a non-zero error code; this may not always be the case but it seems to work.
 
 ## asyncSpawn
-This is a async version of NodeJS spawn. Its QuickJS implementation is essentially the same as execeps except it exposes stdout that can be read by the client, as oppesed to execps which returns the entire stdout when the pipe read completes.
+This is a async version of NodeJS spawn. The QuickJS implementation is essentially the same as execeps except it exposes stdout that can be read by the client, as oppesed to execps which returns the entire stdout when the pipe read completes. **NOTE** ribackup.mjs only spawns rsync and therefore only reads the response; stdin to a spawned command is not implemented. It could be by specifying a write mode argument, or replacing the C pipe implementation with a proper fork/exec.
+
+## Date.prototype.toLocaleString
+This implements support for the 'sv-SE' locale needed by ribackup. Anyother, or no, locale uses the QuickJS default.
 
 ## hostname
 This is implemented in ribImports.mjs as a Pipe instace to the system hostname command.
