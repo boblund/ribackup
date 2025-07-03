@@ -94,11 +94,21 @@ static JSValue js_pipe_read( JSContext *ctx, JSValueConst this_val,
 		}
 }
 
-/*static JSValue js_pipe_write( JSContext *ctx, JSValueConst this_val,
-                             int argc, JSValueConst *argv )
+static JSValue js_pipe_write( JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
 {
-
-}*/
+		JSPipeData *pd = JS_GetOpaque2( ctx, this_val, js_pipe_class_id );
+		size_t size;
+		uint8_t *data = JS_GetArrayBuffer(ctx, &size, argv[0]);
+    if (!data) {
+        return JS_EXCEPTION;
+    }
+    size_t written = fwrite(data, 1, size, pd->f);
+    if (written != size) {
+        return JS_EXCEPTION;
+    }
+		return JS_UNDEFINED;
+}
 
 static JSValue js_pipe_close( JSContext *ctx, JSValueConst this_val,
                              int argc, JSValueConst *argv )
@@ -114,7 +124,7 @@ static JSClassDef js_pipe_class = {
 
 static const JSCFunctionListEntry funcs[] = {
 	JS_CFUNC_DEF( "read", 0, js_pipe_read ),
-	//JS_CFUNC_DEF( "write", 1, js_pipe_write ),
+	JS_CFUNC_DEF( "write", 1, js_pipe_write ),
 	JS_CFUNC_DEF( "close", 0, js_pipe_close )
 };
 
