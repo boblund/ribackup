@@ -1,24 +1,28 @@
 QJSC = qjsc
-QJSC_FLAGS = -m -e -o ribackup.c
-JS_SRC = ../ribackup.mjs
-
 CC = gcc
 QJS_BASE = $(shell ./qjs_env.sh)
 CFLAGS = -I$(QJS_BASE)/include/quickjs
 LDFLAGS = -L$(QJS_BASE)/lib/quickjs -lquickjs -lm -lpthread -ldl
-SRC = process.c ribackup.c
-OUT = ribackup
 
 .PHONY: all clean
 
-all: $(OUT)
+TARGET = ribackup
+TARGET_MJS = ../$(TARGET).mjs
 
-ribackup.c: $(JS_SRC)
-	$(QJSC) $(QJSC_FLAGS) $(JS_SRC)
-	./add_js_init.sh create_global_process_object ribackup.c
+all: $(TARGET)
 
-$(OUT): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) $(LDFLAGS) -o $(OUT)
+$(TARGET).c:  $(TARGET_MJS)
+	$(QJSC)  -e -m -o $(TARGET).c $(TARGET_MJS)
+	./add_js_init.sh qjsPlatform $(TARGET).c
+
+$(TARGET).o: $(TARGET).c
+	$(CC) $(CFLAGS) -c -o $(TARGET).o $(TARGET).c
+
+qjsPlatform.o: qjsPlatform.c
+	$(CC) $(CFLAGS) -c -o qjsPlatform.o qjsPlatform.c
+
+$(TARGET): $(TARGET).o qjsPlatform.o
+	$(CC) $(LDFLAGS) -o $(TARGET) *.o
 
 clean:
-	rm -f ribackup.c* $(OUT)
+	rm -f rm -f $(TARGET) $(TARGET).c* $(TARGET).o qjsPlatform.o
