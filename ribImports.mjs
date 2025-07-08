@@ -38,9 +38,10 @@ if( isNode ){
 	};
 
 } else { // presume quickjs
+	const { exit, dirname, spawn, Pipe } = await import( 'qjsPlatform' );
 
 	hostname = function() {
-		const pipe = new Pipe( "hostname", "r" ); // Pipe is a global defined in process.c
+		const pipe = new Pipe( "hostname", "r" );
 		const ab = pipe.read();
 		pipe.close();
 		return String.fromCharCode.apply( null, new Uint8Array( ab, 0, ab.byteLength - 1 ) ); //drop \n
@@ -53,7 +54,7 @@ if( isNode ){
 			.replace( /\/+/g, '/' ); // Replace multiple slashes with a single slash
 	};
 
-	__dirname = dirname; // dirname is a global defined in process.c
+	__dirname = dirname();
 
 	Date.prototype.__toLocaleString = Date.prototype.toLocaleString;
 	Date.prototype.toLocaleString = function( arg ) {
@@ -69,10 +70,14 @@ if( isNode ){
 		}
 	};
 
-	// globalThis.process.exit( code ) defined in process.c
-	globalThis.process.stdout = {};
-	globalThis.process.versions = { quick: true };
-	globalThis.process.argv = [ '', ...scriptArgs ];		// scriptArgs quickjs global. nodejs process.argv[0] = path to node command
+	// qjs globals
+
+	globalThis.process = {
+		exit,
+		stdout: {},
+		versions: { quick: true },
+		argv: [ '', ...scriptArgs ]
+	};
 
 	execps = function( cmd ){
 		let pipe = new Pipe( cmd + ' 2>&1', "r" ), stdout = ''; // Pipe global defined in process.c
