@@ -1,3 +1,5 @@
+// Add missing NodeJS platform APIs to quickjs for ribackup
+
 #include "quickjs.h"
 #include <unistd.h>
 #include <stdlib.h>
