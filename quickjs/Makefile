@@ -22,7 +22,7 @@ qjsPlatform.o: qjsPlatform.c
 	$(CC) $(CFLAGS) -c -o qjsPlatform.o qjsPlatform.c
 
 $(TARGET): $(TARGET).o qjsPlatform.o
-	$(CC) $(LDFLAGS) -o $(TARGET) *.o
+	$(CC) *.o $(LDFLAGS) -o $(TARGET)
 
 clean:
 	rm -f rm -f $(TARGET) $(TARGET).c* $(TARGET).o qjsPlatform.o
