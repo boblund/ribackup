@@ -8,21 +8,17 @@ LDFLAGS = -L$(QJS_BASE)/lib/quickjs -lquickjs -lm -lpthread -ldl
 
 TARGET = ribackup
 TARGET_MJS = ../$(TARGET).mjs
+JS_MODULE = qjsPlatform
+C_SRC = $(JS_MODULE).c $(TARGET).c
 
 all: $(TARGET)
 
 $(TARGET).c:  $(TARGET_MJS)
 	$(QJSC)  -e -m -o $(TARGET).c $(TARGET_MJS)
-	./add_js_init.sh qjsPlatform $(TARGET).c
+	./add_js_init.sh $(JS_MODULE) $(TARGET).c
 
-$(TARGET).o: $(TARGET).c
-	$(CC) $(CFLAGS) -c -o $(TARGET).o $(TARGET).c
-
-qjsPlatform.o: qjsPlatform.c
-	$(CC) $(CFLAGS) -c -o qjsPlatform.o qjsPlatform.c
-
-$(TARGET): $(TARGET).o qjsPlatform.o
-	$(CC) *.o $(LDFLAGS) -o $(TARGET)
+$(TARGET): $(C_SRC)
+	$(CC) $(CFLAGS) $(C_SRC) $(LDFLAGS) -o $(TARGET)
 
 clean:
-	rm -f rm -f $(TARGET) $(TARGET).c* $(TARGET).o qjsPlatform.o
+	rm -f $(TARGET) $(TARGET).c*
